@@ -4,71 +4,73 @@
   <meta charset="utf-8" />
   <title>Chess Game</title>
 
-  <!-- 1) jQuery قبل chessboard.js -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-  <!-- 2) استخدم chess.js إصدار 0.12.1 من cdnjs -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"
-    integrity="sha512-rIescAjPgXHz3WaxrSjaOl5iZfvBVIehYe+EF+d+DAdFNgV10QBT8d5APBjcGFKES0iVUYjBilvpck7gOe7CLg=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  ></script> :contentReference[oaicite:0]{index=0}
-
-  <!-- 3) chessboard.js -->
+  <!-- CSS لواجهة الشطرنج -->
   <link
     rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css"
+    href="https://unpkg.com/chessground@8.8.0/dist/chessground.min.css"
   />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"></script>
-  
   <style>
-    #board { width: 400px; margin: 20px auto; }
-    #status { text-align: center; font-family: Arial, sans-serif; margin-top: 10px; }
+    body { display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; }
+    #board { width: 400px; height: 400px; margin-top: 20px; }
+    #status { margin-top: 10px; font-weight: bold; }
   </style>
 </head>
 <body>
+  <h1>Chess</h1>
   <div id="board"></div>
-  <div id="status"></div>
+  <div id="status">Loading…</div>
 
-  <script>
-    // تأكد إن المكتبة محمّلة
-    if (typeof Chess === 'undefined') {
-      document.body.innerHTML = '<p style="color:red; text-align:center;">خطأ: chess.js لم يُحمّل.</p>';
-      throw new Error('chess.js not loaded');
-    }
+  <!-- اسكريبت نوع module يستخدم المكتبات من unpkg -->
+  <script type="module">
+    import { Chess } from 'https://unpkg.com/chess.js@1.0.0/chess.mjs';
+    import { Chessground } from 'https://unpkg.com/chessground@8.8.0/dist/chessground.esm.js';
 
-    const board = Chessboard('board', {
-      draggable: true,
-      position: 'start',
-      onDragStart: (source, piece) => {
-        if (game.game_over() ||
-            (game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-            (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-          return false;
+    // أنشئ منطق اللعبة والرقعة
+    const game = new Chess();
+    const ground = Chessground(document.getElementById('board'), {
+      draggable: {
+        enabled: true,
+        showGhost: true
+      },
+      orientation: 'white',
+      events: {
+        // قبل السحب
+        onDragStart: (from, piece) => {
+          if (game.game_over() ||
+              (game.turn() === 'w' && piece.includes('b')) ||
+              (game.turn() === 'b' && piece.includes('w'))) {
+            return false;
+          }
+        },
+        // عند الإسقاط
+        onDrop: (from, to) => {
+          const move = game.move({ from, to, promotion: 'q' });
+          if (!move) return false;       // invalid → snapback
+          ground.set({ fen: game.fen() });
+          updateStatus();
+          return true;
         }
-      },
-      onDrop: (source, target) => {
-        const move = game.move({ from: source, to: target, promotion: 'q' });
-        if (!move) return 'snapback';
-        updateStatus();
-      },
-      onSnapEnd: () => board.position(game.fen())
+      }
     });
 
-    const game = new Chess();
+    // حدث لتحديث المظهر الأولي
+    ground.set({ fen: game.fen() });
+
+    // دالة لتحديث نص الحالة
     function updateStatus() {
-      let status = '';
-      const moveColor = game.turn() === 'w' ? 'White' : 'Black';
+      let text;
+      const turnColor = game.turn() === 'w' ? 'White' : 'Black';
       if (game.in_checkmate()) {
-        status = `Game over, ${moveColor} is in checkmate.`;
+        text = `Game over, ${turnColor} is checkmated.`;
       } else if (game.in_draw()) {
-        status = 'Game over, drawn position.';
+        text = 'Game over, drawn position.';
       } else {
-        status = `${moveColor} to move` + (game.in_check() ? `, ${moveColor} is in check` : '');
+        text = `${turnColor} to move${game.in_check() ? ' — in check!' : ''}`;
       }
-      document.getElementById('status').textContent = status;
+      document.getElementById('status').textContent = text;
     }
+
+    // عرض الحالة الأولية
     updateStatus();
   </script>
 </body>

@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <title>Chess Game</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard.min.css" />
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard.min.js"></script>
   <style>
     #board {
       width: 400px;
@@ -24,14 +24,14 @@
   <div id="status"></div>
 
   <script>
-    var board = null
-    var game = new Chess()
+    var board = null;
+    var game = new Chess();
 
     function onDragStart(source, piece, position, orientation) {
-      if (game.game_over()) return false
+      if (game.game_over()) return false;
       if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
           (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-        return false
+        return false;
       }
     }
 
@@ -40,32 +40,32 @@
         from: source,
         to: target,
         promotion: 'q'
-      })
-      if (move === null) return 'snapback'
-      updateStatus()
+      });
+      if (move === null) return 'snapback';
+      updateStatus();
     }
 
     function onSnapEnd() {
-      board.position(game.fen())
+      board.position(game.fen());
     }
 
     function updateStatus() {
-      var status = ''
-      var moveColor = 'White'
+      var status = '';
+      var moveColor = 'White';
       if (game.turn() === 'b') {
-        moveColor = 'Black'
+        moveColor = 'Black';
       }
       if (game.in_checkmate()) {
-        status = 'Game over, ' + moveColor + ' is in checkmate.'
+        status = 'Game over, ' + moveColor + ' is in checkmate.';
       } else if (game.in_draw()) {
-        status = 'Game over, drawn position.'
+        status = 'Game over, drawn position.';
       } else {
-        status = moveColor + ' to move'
+        status = moveColor + ' to move';
         if (game.in_check()) {
-          status += ', ' + moveColor + ' is in check'
+          status += ', ' + moveColor + ' is in check';
         }
       }
-      document.getElementById('status').innerHTML = status
+      document.getElementById('status').innerHTML = status;
     }
 
     var config = {
@@ -74,9 +74,9 @@
       onDragStart: onDragStart,
       onDrop: onDrop,
       onSnapEnd: onSnapEnd
-    }
-    board = Chessboard('board', config)
-    updateStatus()
+    };
+    board = Chessboard('board', config);
+    updateStatus();
   </script>
 </body>
 </html>

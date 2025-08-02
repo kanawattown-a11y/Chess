@@ -7,14 +7,12 @@
   <!-- 1) jQuery -->
   <script
     src="https://code.jquery.com/jquery-3.6.0.min.js"
-    integrity="sha256-/xUj+3OJ+Yk+zGGS1Z6b8q8Pgm3+2lz5IsZ6kZJFa3M="
     crossorigin="anonymous"
   ></script>
 
   <!-- 2) chess.js 0.12.1 (IIFE) -->
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"
-    integrity="sha512-rIescAjPgXHz3WaxrSjaOl5iZfvBVIehYe+EF+d+DAdFNgV10QBT8d5APBjcGFKES0iVUYjBilvpck7gOe7CLg=="
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
   ></script>
@@ -23,13 +21,11 @@
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css"
-    integrity="sha512-I/qUv8l9Rp3ab5nij26WZkFJFLmxQ0vjYytzVH1h4hcXZcgrDthkx1zFB7vpLaTzBScS0NO2acaIULG+Fzkt4w=="
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
   />
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"
-    integrity="sha512-l1V+WR15ZLfXXWPOgmqvtP63X5nUWe+lmhnpDu0GyzDG9J9wRlaStljVOOqOD0ct+3TD9sQcRz+H/OjDkCSGVg=="
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
   ></script>
@@ -52,6 +48,7 @@
     const board = Chessboard('board', {
       draggable: true,
       position: 'start',
+      pieceTheme: 'https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png',
       onDragStart: (src, piece) => {
         if (game.game_over() ||
             (game.turn()==='w' && piece.startsWith('b')) ||

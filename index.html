@@ -15,20 +15,20 @@
   <div id="status">Loading…</div>
 
   <script type="module">
-    // 1) استيراد من Skypack – يدعم CORS و ESM
-    import { Chess } from 'https://cdn.skypack.dev/chess.js@1.0.0';
-    import chessgroundModule from 'https://cdn.skypack.dev/chessground@8.8.0';
+    // استيراد ESM من esm.sh (يدعم CORS ويُحضّر الحزم آليًا)
+    import { Chess } from 'https://esm.sh/chess.js@1.0.0';
+    import { Chessground } from 'https://esm.sh/chessground@8.8.0';
 
-    // بعض الإصدارات تصدر default باسم 'chessground' أو كائن يتضمّن 'Chessground'
-    const Chessground = chessgroundModule.Chessground || chessgroundModule;
-
-    // 2) إعداد منطق اللعبة والواجهة
+    // تهيئة منطق اللعبة
     const game = new Chess();
+
+    // تهيئة الرقعة
     const ground = Chessground(document.getElementById('board'), {
       draggable: { enabled: true, showGhost: true },
       orientation: 'white',
       events: {
         onDragStart: (from, piece) => {
+          // منع السحب إذا انتهت اللعبة أو تحريك قطع الخصم في دورك
           if (game.game_over() ||
               (game.turn() === 'w' && piece.includes('b')) ||
               (game.turn() === 'b' && piece.includes('w'))) {
@@ -36,8 +36,10 @@
           }
         },
         onDrop: (from, to) => {
+          // حاول تنفيذ الحركة
           const move = game.move({ from, to, promotion: 'q' });
-          if (!move) return false;             // invalid → snapback
+          if (!move) return false;       // غير قانونية → snapback
+          // حدّث الرقعة والنص
           ground.set({ fen: game.fen() });
           updateStatus();
           return true;
@@ -45,18 +47,23 @@
       }
     });
 
-    // 3) عرض الوضعية الأولية وتحديث الحالة
+    // عرض الوضعية الأولية
     ground.set({ fen: game.fen() });
+
+    // دالة لتحديث حالة اللعبة نصيًا
     function updateStatus() {
       const turnColor = game.turn() === 'w' ? 'White' : 'Black';
       let text;
       if (game.in_checkmate())      text = `Game over, ${turnColor} is checkmated.`;
       else if (game.in_draw())      text = 'Game over, drawn position.';
       else {
-        text = `${turnColor} to move` + (game.in_check() ? ' — in check!' : '');
+        text = `${turnColor} to move`;
+        if (game.in_check()) text += ' — in check!';
       }
       document.getElementById('status').textContent = text;
     }
+
+    // أول تحديث للحالة
     updateStatus();
   </script>
 </body>

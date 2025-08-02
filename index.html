@@ -3,67 +3,92 @@
 <head>
   <meta charset="utf-8" />
   <title>Chess Game</title>
+
+  <!-- 1) جQuery (مطلوب قبل chessboard.js) -->
+  <script
+    src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJ+Yk+zGGS1Z6b8q8Pgm3+2lz5IsZ6kZJFa3M="
+    crossorigin="anonymous"
+  ></script>
+
+  <!-- 2) chess.js 0.12.1 — آخر إصدار IIFE يدعم window.Chess -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"
+    integrity="sha512-rIescAjPgXHz3WaxrSjaOl5iZfvBVIehYe+EF+d+DAdFNgV10QBT8d5APBjcGFKES0iVUYjBilvpck7gOe7CLg=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+
+  <!-- 3) chessboard.js 1.0.0 -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css"
+    integrity="sha512-CYl1MDncN3wkuobcCNnQMiw0cO4XEHv8cG5KxPdOTvg6eRDLrhX1vbkSKVAaidultdIHfJjuz9Ze+2iNI3bXWw=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"
+    integrity="sha512-2I42HV9kVQvJu6tXimDDMxRqFhebbESA8NlPV+qE7oVFS8ry52Zk6GxU+9O/rH/B9zVW2yqf2kVDzIhJkoL9SQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+
   <style>
-    body { display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; }
-    #board { width: 400px; height: 400px; margin-top: 20px; }
-    #status { margin-top: 10px; font-weight: bold; }
+    #board { width: 400px; margin: 20px auto; }
+    #status { text-align: center; font-family: Arial, sans-serif; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h1>Chess</h1>
   <div id="board"></div>
-  <div id="status">Loading…</div>
+  <div id="status"></div>
 
-  <script type="module">
-    // استيراد ESM من esm.sh (يدعم CORS ويُحضّر الحزم آليًا)
-    import { Chess } from 'https://esm.sh/chess.js@1.0.0';
-    import { Chessground } from 'https://esm.sh/chessground@8.8.0';
+  <script>
+    // تأكد من تحميل chess.js و chessboard.js
+    if (typeof Chess !== 'function') {
+      document.body.innerHTML = '<p style="color:red; text-align:center;">خطأ: chess.js لم يُحمّل.</p>';
+      throw new Error('chess.js not loaded');
+    }
+    if (typeof Chessboard !== 'function') {
+      document.body.innerHTML = '<p style="color:red; text-align:center;">خطأ: chessboard.js لم يُحمّل.</p>';
+      throw new Error('chessboard.js not loaded');
+    }
 
-    // تهيئة منطق اللعبة
     const game = new Chess();
-
-    // تهيئة الرقعة
-    const ground = Chessground(document.getElementById('board'), {
-      draggable: { enabled: true, showGhost: true },
-      orientation: 'white',
-      events: {
-        onDragStart: (from, piece) => {
-          // منع السحب إذا انتهت اللعبة أو تحريك قطع الخصم في دورك
-          if (game.game_over() ||
-              (game.turn() === 'w' && piece.includes('b')) ||
-              (game.turn() === 'b' && piece.includes('w'))) {
-            return false;
-          }
-        },
-        onDrop: (from, to) => {
-          // حاول تنفيذ الحركة
-          const move = game.move({ from, to, promotion: 'q' });
-          if (!move) return false;       // غير قانونية → snapback
-          // حدّث الرقعة والنص
-          ground.set({ fen: game.fen() });
-          updateStatus();
-          return true;
+    const board = Chessboard('board', {
+      draggable: true,
+      position: 'start',
+      onDragStart: (source, piece) => {
+        if (game.game_over() ||
+            (game.turn() === 'w' && piece.startsWith('b')) ||
+            (game.turn() === 'b' && piece.startsWith('w'))) {
+          return false;
         }
+      },
+      onDrop: (source, target) => {
+        const move = game.move({ from: source, to: target, promotion: 'q' });
+        if (!move) return 'snapback';
+        updateStatus();
+      },
+      onSnapEnd: () => {
+        board.position(game.fen());
       }
     });
 
-    // عرض الوضعية الأولية
-    ground.set({ fen: game.fen() });
-
-    // دالة لتحديث حالة اللعبة نصيًا
     function updateStatus() {
       const turnColor = game.turn() === 'w' ? 'White' : 'Black';
-      let text;
-      if (game.in_checkmate())      text = `Game over, ${turnColor} is checkmated.`;
-      else if (game.in_draw())      text = 'Game over, drawn position.';
-      else {
-        text = `${turnColor} to move`;
-        if (game.in_check()) text += ' — in check!';
+      let status;
+      if (game.in_checkmate()) {
+        status = `Game over, ${turnColor} is checkmated.`;
+      } else if (game.in_draw()) {
+        status = 'Game over, drawn position.';
+      } else {
+        status = `${turnColor} to move` + (game.in_check() ? ' — in check!' : '');
       }
-      document.getElementById('status').textContent = text;
+      document.getElementById('status').textContent = status;
     }
 
-    // أول تحديث للحالة
+    // العرض الأولي للحالة
     updateStatus();
   </script>
 </body>

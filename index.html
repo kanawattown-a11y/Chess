@@ -1,11 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Chess Game</title>
+
+  <!-- 1) jQuery مطلوب قبل chessboard.js -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- 2) chess.js (المنطق فقط) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
+
+  <!-- 3) chessboard.js -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css"
+  />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css" />
+
   <style>
     #board {
       width: 400px;
@@ -23,10 +34,24 @@
   <div id="status"></div>
 
   <script>
+    // تأكد من تحميل المكتبات
+    if (!window.$) {
+      document.body.innerHTML = '<p style="color:red; text-align:center;">خطأ: jQuery لم يُحمّل.</p>';
+      throw new Error('jQuery not loaded');
+    }
+    if (typeof Chess === 'undefined') {
+      document.body.innerHTML = '<p style="color:red; text-align:center;">خطأ: chess.js لم يُحمّل.</p>';
+      throw new Error('chess.js not loaded');
+    }
+    if (typeof Chessboard === 'undefined') {
+      document.body.innerHTML = '<p style="color:red; text-align:center;">خطأ: chessboard.js لم يُحمّل.</p>';
+      throw new Error('chessboard.js not loaded');
+    }
+
     var board = null;
     var game = new Chess();
 
-    function onDragStart(source, piece, position, orientation) {
+    function onDragStart(source, piece) {
       if (game.game_over()) return false;
       if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
           (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
@@ -35,11 +60,7 @@
     }
 
     function onDrop(source, target) {
-      var move = game.move({
-        from: source,
-        to: target,
-        promotion: 'q'
-      });
+      var move = game.move({ from: source, to: target, promotion: 'q' });
       if (move === null) return 'snapback';
       updateStatus();
     }
@@ -50,21 +71,18 @@
 
     function updateStatus() {
       var status = '';
-      var moveColor = 'White';
-      if (game.turn() === 'b') {
-        moveColor = 'Black';
-      }
+      var moveColor = game.turn() === 'w' ? 'White' : 'Black';
+
       if (game.in_checkmate()) {
         status = 'Game over, ' + moveColor + ' is in checkmate.';
       } else if (game.in_draw()) {
         status = 'Game over, drawn position.';
       } else {
         status = moveColor + ' to move';
-        if (game.in_check()) {
-          status += ', ' + moveColor + ' is in check';
-        }
+        if (game.in_check()) status += ', ' + moveColor + ' is in check';
       }
-      document.getElementById('status').innerHTML = status;
+
+      document.getElementById('status').textContent = status;
     }
 
     var config = {

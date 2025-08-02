@@ -4,14 +4,14 @@
   <meta charset="utf-8" />
   <title>Chess Game</title>
 
-  <!-- 1) جQuery (مطلوب قبل chessboard.js) -->
+  <!-- 1) jQuery -->
   <script
     src="https://code.jquery.com/jquery-3.6.0.min.js"
     integrity="sha256-/xUj+3OJ+Yk+zGGS1Z6b8q8Pgm3+2lz5IsZ6kZJFa3M="
     crossorigin="anonymous"
   ></script>
 
-  <!-- 2) chess.js 0.12.1 — آخر إصدار IIFE يدعم window.Chess -->
+  <!-- 2) chess.js 0.12.1 (IIFE) -->
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"
     integrity="sha512-rIescAjPgXHz3WaxrSjaOl5iZfvBVIehYe+EF+d+DAdFNgV10QBT8d5APBjcGFKES0iVUYjBilvpck7gOe7CLg=="
@@ -19,17 +19,17 @@
     referrerpolicy="no-referrer"
   ></script>
 
-  <!-- 3) chessboard.js 1.0.0 -->
+  <!-- 3) chessboard.js 1.0.0 CSS & JS من CDNJS -->
   <link
     rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css"
-    integrity="sha512-CYl1MDncN3wkuobcCNnQMiw0cO4XEHv8cG5KxPdOTvg6eRDLrhX1vbkSKVAaidultdIHfJjuz9Ze+2iNI3bXWw=="
+    href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css"
+    integrity="sha512-I/qUv8l9Rp3ab5nij26WZkFJFLmxQ0vjYytzVH1h4hcXZcgrDthkx1zFB7vpLaTzBScS0NO2acaIULG+Fzkt4w=="
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
   />
   <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"
-    integrity="sha512-2I42HV9kVQvJu6tXimDDMxRqFhebbESA8NlPV+qE7oVFS8ry52Zk6GxU+9O/rH/B9zVW2yqf2kVDzIhJkoL9SQ=="
+    src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"
+    integrity="sha512-l1V+WR15ZLfXXWPOgmqvtP63X5nUWe+lmhnpDu0GyzDG9J9wRlaStljVOOqOD0ct+3TD9sQcRz+H/OjDkCSGVg=="
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
   ></script>
@@ -44,51 +44,40 @@
   <div id="status"></div>
 
   <script>
-    // تأكد من تحميل chess.js و chessboard.js
-    if (typeof Chess !== 'function') {
-      document.body.innerHTML = '<p style="color:red; text-align:center;">خطأ: chess.js لم يُحمّل.</p>';
-      throw new Error('chess.js not loaded');
-    }
-    if (typeof Chessboard !== 'function') {
-      document.body.innerHTML = '<p style="color:red; text-align:center;">خطأ: chessboard.js لم يُحمّل.</p>';
-      throw new Error('chessboard.js not loaded');
-    }
+    // تأكد من التحميل
+    if (typeof Chess !== 'function')       alert('Error: chess.js failed to load');
+    if (typeof Chessboard !== 'function') alert('Error: chessboard.js failed to load');
 
     const game = new Chess();
     const board = Chessboard('board', {
       draggable: true,
       position: 'start',
-      onDragStart: (source, piece) => {
+      onDragStart: (src, piece) => {
         if (game.game_over() ||
-            (game.turn() === 'w' && piece.startsWith('b')) ||
-            (game.turn() === 'b' && piece.startsWith('w'))) {
+            (game.turn()==='w' && piece.startsWith('b')) ||
+            (game.turn()==='b' && piece.startsWith('w'))) {
           return false;
         }
       },
-      onDrop: (source, target) => {
-        const move = game.move({ from: source, to: target, promotion: 'q' });
-        if (!move) return 'snapback';
+      onDrop: (src, dst) => {
+        const m = game.move({ from: src, to: dst, promotion: 'q' });
+        if (!m) return 'snapback';
         updateStatus();
       },
-      onSnapEnd: () => {
-        board.position(game.fen());
-      }
+      onSnapEnd: () => board.position(game.fen())
     });
 
     function updateStatus() {
-      const turnColor = game.turn() === 'w' ? 'White' : 'Black';
-      let status;
-      if (game.in_checkmate()) {
-        status = `Game over, ${turnColor} is checkmated.`;
-      } else if (game.in_draw()) {
-        status = 'Game over, drawn position.';
-      } else {
-        status = `${turnColor} to move` + (game.in_check() ? ' — in check!' : '');
+      const turn = game.turn() === 'w' ? 'White' : 'Black';
+      let txt;
+      if (game.in_checkmate())       txt = `Game over, ${turn} is checkmated.`;
+      else if (game.in_draw())       txt = 'Game over, drawn position.';
+      else {
+        txt = `${turn} to move`;
+        if (game.in_check()) txt += ' — in check!';
       }
-      document.getElementById('status').textContent = status;
+      document.getElementById('status').textContent = txt;
     }
-
-    // العرض الأولي للحالة
     updateStatus();
   </script>
 </body>

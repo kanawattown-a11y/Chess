@@ -3,12 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <title>Chess Game</title>
-
-  <!-- CSS لواجهة الشطرنج -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/chessground@8.8.0/dist/chessground.min.css"
-  />
   <style>
     body { display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; }
     #board { width: 400px; height: 400px; margin-top: 20px; }
@@ -20,21 +14,20 @@
   <div id="board"></div>
   <div id="status">Loading…</div>
 
-  <!-- اسكريبت نوع module يستخدم المكتبات من unpkg -->
   <script type="module">
-    import { Chess } from 'https://unpkg.com/chess.js@1.0.0/chess.mjs';
-    import { Chessground } from 'https://unpkg.com/chessground@8.8.0/dist/chessground.esm.js';
+    // 1) استيراد من Skypack – يدعم CORS و ESM
+    import { Chess } from 'https://cdn.skypack.dev/chess.js@1.0.0';
+    import chessgroundModule from 'https://cdn.skypack.dev/chessground@8.8.0';
 
-    // أنشئ منطق اللعبة والرقعة
+    // بعض الإصدارات تصدر default باسم 'chessground' أو كائن يتضمّن 'Chessground'
+    const Chessground = chessgroundModule.Chessground || chessgroundModule;
+
+    // 2) إعداد منطق اللعبة والواجهة
     const game = new Chess();
     const ground = Chessground(document.getElementById('board'), {
-      draggable: {
-        enabled: true,
-        showGhost: true
-      },
+      draggable: { enabled: true, showGhost: true },
       orientation: 'white',
       events: {
-        // قبل السحب
         onDragStart: (from, piece) => {
           if (game.game_over() ||
               (game.turn() === 'w' && piece.includes('b')) ||
@@ -42,10 +35,9 @@
             return false;
           }
         },
-        // عند الإسقاط
         onDrop: (from, to) => {
           const move = game.move({ from, to, promotion: 'q' });
-          if (!move) return false;       // invalid → snapback
+          if (!move) return false;             // invalid → snapback
           ground.set({ fen: game.fen() });
           updateStatus();
           return true;
@@ -53,24 +45,18 @@
       }
     });
 
-    // حدث لتحديث المظهر الأولي
+    // 3) عرض الوضعية الأولية وتحديث الحالة
     ground.set({ fen: game.fen() });
-
-    // دالة لتحديث نص الحالة
     function updateStatus() {
-      let text;
       const turnColor = game.turn() === 'w' ? 'White' : 'Black';
-      if (game.in_checkmate()) {
-        text = `Game over, ${turnColor} is checkmated.`;
-      } else if (game.in_draw()) {
-        text = 'Game over, drawn position.';
-      } else {
-        text = `${turnColor} to move${game.in_check() ? ' — in check!' : ''}`;
+      let text;
+      if (game.in_checkmate())      text = `Game over, ${turnColor} is checkmated.`;
+      else if (game.in_draw())      text = 'Game over, drawn position.';
+      else {
+        text = `${turnColor} to move` + (game.in_check() ? ' — in check!' : '');
       }
       document.getElementById('status').textContent = text;
     }
-
-    // عرض الحالة الأولية
     updateStatus();
   </script>
 </body>
